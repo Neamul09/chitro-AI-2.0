@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>চিত্র.AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    body {
+      font-family: 'Anek Bangla', sans-serif;
+      margin: 20px;
+      background-color: #282A36;
+      color: #F8F8F2;
+    }
+
+    #cardContainer {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+    }
+
+    #promptCard, #imageCard {
+      width: 90%;
+      margin: 10px;
+      padding: 20px;
+      border-radius: 10px;
+      background-color: #44475A;
+      border: 2px solid #6272A4;
+      position: relative;
+      /* Added for positioning the overlay */
+    }
+
+    #promptInput{
+      width: 100%;
+      margin-bottom: 10px;
+
+    }
+    #generateButton, #downloadButton{
+      margin-bottom: 10px;
+      justify-content: center;
+      left: 50%;
+      width: 50%;
+      text-align: center;
+      background: linear-gradient(
+      to left,
+      #FF79C6 10%,
+      #BD93F9 30%,
+      #FF79C6 75%,
+      #BD93F9 100%
+      );
+      color: #fff;
+      border: none;
+      animation: textShine 5s ease-in-out infinite alternate;
+      background-size: 500% auto;
+      animation: textShine 5s ease-in-out infinite alternate;
+    }
+    #downloadButton{
+      margin-top:10px;
+      border-radius:3px;
+      animation: none;
+      padding:10px;
+      margin-bottom:0;
+    
+    }
+
+    #loadingOverlay {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(98, 114, 164, 0.9);
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      z-index: 1000;
+      border-radius: 10px;
+
+    }
+
+    #loading-text {
+      background: linear-gradient(
+      to right,
+      #FF79C6 20%,
+      #BD93F9 30%,
+      #FF79C6 70%,
+      #BD93F9 80%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-fill-color: transparent;
+      background-size: 500% auto;
+      animation: textShine 5s ease-in-out infinite alternate;
+      
+    }
+
+    #generatedPrompt {
+      font-weight: bold;
+      display: none;
+    }
+
+    #generatedImage {
+      margin-top: 10px;
+      max-width: 100%;
+      border-radius: 10px;
+    }
+    footer {
+      text-align: center;
+      color: grey;
+    }
+    span {
+      color: #fff;
+    }
+
+    h1 {
+      background: linear-gradient(
+      to right,
+      #FF79C6 20%,
+      #BD93F9 30%,
+      #FF79C6 70%,
+      #BD93F9 80%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-fill-color: transparent;
+      background-size: 500% auto;
+      animation: textShine 5s ease-in-out infinite alternate;
+    }
+    @keyframes textShine {
+      0% {
+        background-position: 0% 50%;
+      }
+      100% {
+        background-position: 100% 50%;
+      }
+    }
+    span{
+      background: linear-gradient(
+      to right,
+      #FF79C6 30%,
+      #BD93F9 70%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-fill-color: transparent;
+      background-size: auto;
+    }
+    #heroSection {
+      margin-top:20px;
+        text-align: center;
+    }
+
+  </style>
+</head>
+<body>
+  <h2>চিত্র.AI</h2>
+<!-- Add this section inside the <body> tag, before the existing content -->
+<div id="heroSection" class="text-center">
+    <h1 class="display-4">চিত্র.AI 2.0 Beta</h1>
+    <h4>Generate <span>unique images </span>based on your descriptions with <span>Any Language!</span></h4>
+    <p>Enter your prompt and click <span>"Generate Image"</span> to see the magic unfold.</p>
+</div>
+
+  <div id="cardContainer">
+    <div id="promptCard">
+      <label for="promptInput">ছবির বিস্তারিত লিখুন:</label>
+      <input type="text" id="promptInput" class="form-control" placeholder="Enter your prompt">
+      <button id="generateButton" class="btn btn-primary" onclick="generateImage()">তৈরী করুন</button>
+      <div id="loadingOverlay">
+        <div id="loading">
+          <h3 id="loading-text">লোড হচ্ছে...</h3>
+        </div>
+      </div>
+      <div id="generatedPrompt"></div>
+    </div>
+
+    <div id="imageCard">
+      <img id="generatedImage" src="" alt="Generated Image" class="img-fluid">
+     <div> <button id="downloadButton" onclick="downloadImage()">Download Image</button></div>
+      <div id="loadingOverlay">
+        <div id="loading">
+          লোড হচ্ছে...
+        </div>
+      </div>
+    </div>
+  </div>
+  <footer class="">
+    <span>©Redont 2024</span> in collaboration with <span>BigTdevs</span>
+  </footer>
+
+
+
+  <!-- Your existing head content -->
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      document.getElementById('imageCard').style.display = 'none';
+    
+    });
+
+    function showLoading() {
+    
+      document.getElementById('loadingOverlay').style.display = 'flex';
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingOverlay').style.display = 'none';
+      document.getElementById('imageCard').style.display = 'grid';
+
+    }
+
+    function containsNSFWWord(input) {
+      // Replace with your list of NSFW words in English
+      var nsfwWords = [
+        "2g1c",
+        "2 girls 1 cup",
+        "acrotomophilia",
+        "alabama hot pocket",
+        "alaskan pipeline",
+        "anal",
+        "anilingus",
+        "anus",
+        "apeshit",
+        "arsehole",
+        "ass",
+        "asshole",
+        "assmunch",
+        "auto erotic",
+        "autoerotic",
+        "babeland",
+        "baby batter",
+        "baby juice",
+        "bra",
+        "bikini",
+        "lingerie",
+        "panties",
+        "shortpant",
+        "No Cloth",
+        "ball gag",
+        "ball gravy",
+        "ball kicking",
+        "ball licking",
+        "ball sack",
+        "ball sucking",
+        "bangbros",
+        "bangbus",
+        "bareback",
+        "barely legal",
+        "barenaked",
+        "bastard",
+        "bastardo",
+        "bastinado",
+        "bbw",
+        "bdsm",
+        "beaner",
+        "beaners",
+        "beaver cleaver",
+        "beaver lips",
+        "beastiality",
+        "bestiality",
+        "big black",
+        "big breasts",
+        "big knockers",
+        "big tits",
+        "bimbos",
+        "birdlock",
+        "bitch",
+        "bitches",
+        "black cock",
+        "blonde action",
+        "blonde on blonde action",
+        "blowjob",
+        "blow job",
+        "blow your load",
+        "blue waffle",
+        "blumpkin",
+        "bollocks",
+        "bondage",
+        "boner",
+        "boob",
+        "boobs",
+        "booty call",
+        "brown showers",
+        "brunette action",
+        "bukkake",
+        "bulldyke",
+        "bullet vibe",
+        "bullshit",
+        "bung hole",
+        "bunghole",
+        "busty",
+        "butt",
+        "buttcheeks",
+        "butthole",
+        "camel toe",
+        "camgirl",
+        "camslut",
+        "camwhore",
+        "carpet muncher",
+        "carpetmuncher",
+        "chocolate rosebuds",
+        "cialis",
+        "circlejerk",
+        "cleveland steamer",
+        "clit",
+        "clitoris",
+        "clover clamps",
+        "clusterfuck",
+        "cock",
+        "cocks",
+        "coprolagnia",
+        "coprophilia",
+        "cornhole",
+        "coon",
+        "coons",
+        "creampie",
+        "cum",
+        "cumming",
+        "cumshot",
+        "cumshots",
+        "cunnilingus",
+        "cunt",
+        "darkie",
+        "date rape",
+        "daterape",
+        "deep throat",
+        "deepthroat",
+        "dendrophilia",
+        "dick",
+        "dildo",
+        "dingleberry",
+        "dingleberries",
+        "dirty pillows",
+        "dirty sanchez",
+        "doggie style",
+        "doggiestyle",
+        "doggy style",
+        "doggystyle",
+        "dog style",
+        "dolcett",
+        "domination",
+        "dominatrix",
+        "dommes",
+        "donkey punch",
+        "double dong",
+        "double penetration",
+        "dp action",
+        "dry hump",
+				"dirty",
+        "bad work",
+        "dvda",
+        "eat my ass",
+        "ecchi",
+        "ejaculation",
+        "erotic",
+        "erotism",
+        "escort",
+        "eunuch",
+        "fag",
+        "faggot",
+        "fecal",
+        "felch",
+        "fellatio",
+        "feltch",
+        "female squirting",
+        "femdom",
+        "figging",
+        "fingerbang",
+        "fingering",
+        "fisting",
+        "foot fetish",
+        "footjob",
+        "frotting",
+        "fuck",
+        "fuck buttons",
+        "fuckin",
+        "fucking",
+        "fucktards",
+        "fudge packer",
+        "fudgepacker",
+        "futanari",
+        "gangbang",
+        "gang bang",
+        "gay sex",
+        "madari",
+        "genitals",
+        "giant cock",
+        "girl on",
+        "girl on top",
+        "girls gone wild",
+        "goatcx",
+        "goatse",
+        "god damn",
+        "gokkun",
+        "golden shower",
+        "goodpoop",
+        "goo girl",
+        "goregasm",
+        "grope",
+        "group sex",
+        "g-spot",
+        "guro",
+        "hand job",
+        "handjob",
+        "hard core",
+        "hardcore",
+        "hentai",
+        "homoerotic",
+        "honkey",
+        "hooker",
+        "horny",
+        "hot carl",
+        "hot chick",
+        "how to kill",
+        "how to murder",
+        "huge fat",
+        "humping",
+        "incest",
+        "intercourse",
+        "jack off",
+        "jail bait",
+        "jailbait",
+        "jelly donut",
+        "jerk off",
+        "jigaboo",
+        "jiggaboo",
+        "jiggerboo",
+        "jizz",
+        "juggs",
+        "kike",
+        "kinbaku",
+        "kinkster",
+        "kinky",
+        "knobbing",
+        "leather restraint",
+        "leather straight jacket",
+        "lemon party",
+        "livesex",
+        "lolita",
+        "lovemaking",
+        "make me come",
+        "male squirting",
+        "mars",
+        "masturbate",
+        "masturbating",
+        "masturbation",
+        "menage a trois",
+        "milf",
+        "missionary position",
+        "mong",
+        "motherfucker",
+        "mound of venus",
+        "mr hands",
+        "muff diver",
+        "muffdiving",
+        "naked",
+        "nambla",
+        "nawashi",
+        "negro",
+        "neonazi",
+        "nigga",
+        "nigger",
+        "nig nog",
+        "nimphomania",
+        "nipple",
+        "nipples",
+        "nsfw",
+        "nsfw images",
+        "nude",
+        "nudity",
+        "nutten",
+        "nympho",
+        "nymphomania",
+        "octopussy",
+        "omorashi",
+        "one cup two girls",
+        "one guy one jar",
+        "orgasm",
+        "orgy",
+        "paedophile",
+        "paki",
+        "pantie",
+        "panty",
+        "pedobear",
+        "pedophile",
+        "pegging",
+        "penis",
+        "phone sex",
+        "piece of shit",
+        "pikey",
+        "pissing",
+        "piss pig",
+        "pisspig",
+        "playboy",
+        "pleasure chest",
+        "pole smoker",
+        "ponyplay",
+        "poof",
+        "poon",
+        "poontang",
+        "punany",
+        "poop chute",
+        "poopchute",
+        "porn",
+        "porno",
+        "pornography",
+        "prince albert piercing",
+        "pthc",
+        "pubes",
+        "pussy",
+        "queaf",
+        "queef",
+        "quim",
+        "raghead",
+        "raging boner",
+        "rape",
+        "raping",
+        "rapist",
+        "rectum",
+        "reverse cowgirl",
+        "rimjob",
+        "rimming",
+        "rosy palm",
+        "rosy palm and her 5 sisters",
+        "rusty trombone",
+        "sadism",
+        "santorum",
+        "scat",
+        "schlong",
+        "scissoring",
+        "semen",
+        "sex",
+        "sexual",
+        "sexcam",
+        "sexo",
+        "sexy",
+        "sexual",
+        "sexually",
+        "sexuality",
+        "shaved beaver",
+        "shaved pussy",
+        "shemale",
+        "shibari",
+        "shit",
+        "shitblimp",
+        "shitty",
+        "shota",
+        "shrimping",
+        "skeet",
+        "slanteye",
+        "slut",
+        "s&m",
+        "smut",
+        "snatch",
+        "snowballing",
+        "sodomize",
+        "sodomy",
+        "spastic",
+        "spic",
+        "splooge",
+        "splooge moose",
+        "spooge",
+        "spread legs",
+        "spunk",
+        "strap on",
+        "strapon",
+        "strappado",
+        "strip club",
+        "style doggy",
+        "suck",
+        "sucks",
+        "suicide girls",
+        "sultry women",
+        "swastika",
+        "swinger",
+        "tainted love",
+        "taste my",
+        "tea bagging",
+        "threesome",
+        "throating",
+        "thumbzilla",
+        "tied up",
+        "tight white",
+        "tit",
+        "tits",
+        "titties",
+        "titty",
+        "tongue in a",
+        "topless",
+        "tosser",
+        "towelhead",
+        "tranny",
+        "tribadism",
+        "tub girl",
+        "tubgirl",
+        "tushy",
+        "twat",
+        "twink",
+        "twinkie",
+        "two girls one cup",
+        "undressing",
+        "upskirt",
+        "urethra play",
+        "urophilia",
+        "vagina",
+        "venus mound",
+        "viagra",
+        "vibrator",
+        "violet wand",
+        "vorarephilia",
+        "voyeur",
+        "voyeurweb",
+        "voyuer",
+        "vulva",
+        "wank",
+        "wetback",
+        "wet dream",
+        "white power",
+        "whore",
+        "worldsex",
+        "wrapping men",
+        "wrinkled starfish",
+        "xx",
+        "xxx",
+        "yaoi",
+        "yellow showers",
+        "yiffy",
+        "zoophilia",
+        "🖕"
+      ];
+
+      return nsfwWords.some(word => input.toLowerCase().includes(word));
+    }
+
+    function containsFemaleWord(input) {
+      // Replace with your list of female-related words in English
+      var femaleWords = [
+        'female',
+        'woman',
+        'girl',
+        'lady',
+        'feminine',
+        'she',
+        'her',
+        'hers',
+        'sister',
+        'mother',
+        'daughter',
+        'aunt',
+        'niece',
+        'grandmother',
+        'wife',
+        'girlfriend',
+        'bride',
+        'princess',
+        'queen',
+        'goddess',
+        'matron',
+        'madam',
+        'madame',
+        'miss',
+        'ms',
+        'mademoiselle',
+        'dame',
+        'maiden',
+        'damsel',
+        'duchess',
+        'countess',
+        'diva',
+        'femme',
+        'madonna',
+        'mistress',
+        'mom',
+        'matriarch',
+        'maam',
+        'gal',
+        'lass',
+        'lassie',
+        'babe',
+        'damsel',
+        'maiden',
+        'dame',
+        'siren'
+      ];
+
+      return femaleWords.some(word => input.toLowerCase().includes(word));
+    }
+
+    function generateImage() {
+      
+      showLoading();
+      var userPrompt = document.getElementById('promptInput').value;
+
+      // Check for NSFW and female-related words in the prompt
+      if (containsNSFWWord(userPrompt) || containsFemaleWord(userPrompt)) {
+        alert("The prompt you entered is not suitable for everyone & against our terms & conditions.");
+        hideLoading();
+        document.getElementById('generatedImageContainer').style.display = 'none';
+        return;
+      }
+
+      // Send input to Flask API using Fetch
+      fetch('https://brighty.pythonanywhere.com/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          input_text: userPrompt
+        }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('API Response:', data);
+
+        var imageUrl = data.image_url;
+
+        // Check for NSFW and female-related words in the generated image URL
+        if (containsNSFWWord(imageUrl) || containsFemaleWord(imageUrl)) {
+          alert("The generated image contains NSFW or female-related content and cannot be shown.");
+          hideLoading();
+          document.getElementById('generatedImageContainer').style.display = 'none';
+        } else {
+          var generatedImage = document.getElementById('generatedImage');
+          generatedImage.src = imageUrl;
+
+          // Hide loading overlay when the image is fully loaded
+          generatedImage.onload = function () {
+            hideLoading();
+            document.getElementById('generatedImageContainer').style.display = 'block';
+          };
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        hideLoading(); // Hide loading overlay in case of an error
+      });
+    }
+
+    function downloadImage() {
+        var generatedImage = document.getElementById('generatedImage');
+        var imageSrc = generatedImage.src;
+
+        // Create a temporary anchor element
+        var downloadLink = document.createElement('a');
+        downloadLink.href = imageSrc;
+        downloadLink.download = 'generated_image.png';
+
+        // Trigger a click on the anchor element to start the download
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+    }
+
+
+
+  </script>
+
+
+
+  <!-- Your existing script tags -->
+</head>
+<body>
+  <!-- Your existing body content -->
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.7/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
